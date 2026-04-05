@@ -34,6 +34,130 @@ class OrderController extends Controller
         return redirect()->route('order.show', $order->invoice_number);
     }
 
+    public function index(Request $request)
+    {
+        $query = Order::with(['items'])->latest();
+
+        // Filter by payment_status
+        if ($request->filled('payment_status')) {
+            $query->where('payment_status', $request->payment_status);
+        }
+
+        // Filter by order status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Filter by date range
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        // Search by invoice or customer name
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('invoice_number', 'like', "%{$search}%")
+                  ->orWhere('customer_name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        // Summary counts for badges
+        $summary = [
+            'all'       => Order::count(),
+            'pending'   => Order::where('payment_status', 'pending')->count(),
+            'paid'      => Order::where('payment_status', 'paid')->count(),
+            'processing'=> Order::where('status', 'processing')->count(),
+            'shipped'   => Order::where('status', 'shipped')->count(),
+            'delivered' => Order::where('status', 'delivered')->count(),
+            'cancelled' => Order::where('status', 'cancelled')->count(),
+        ];
+
+        $orders = $query->paginate(15)->withQueryString();
+
+        return view('admin.order.index', compact('orders', 'summary'));
+    }
+
+    public function adminshow($id)
+    {
+        $order = Order::with(['items.product', 'payments'])->findOrFail($id);
+        return view('admin.order.order_detail', compact('order'));
+    }
+
+public function updateStatus(Request $request, $id)
+{
+    $request->validate([
+        'status' => 'required|in:pending,processing,shipped,delivered,cancelled',
+    ]);
+
+    $order = Order::findOrFail($id);
+    $oldStatus = $order->status;
+    $newStatus = $request->status;
+
+    $updateData = ['status' => $newStatus];
+
+    if ($newStatus === 'shipped' && !$order->shipped_at) {
+        $updateData['shipped_at'] = now();
+    }
+
+    if ($newStatus === 'delivered' && !$order->delivered_at) {
+        $updateData['delivered_at'] = now();
+
+        if ($order->payment_status === 'paid') {
+            $order->increaseTerjualIfNeeded();
+        }
+    }
+
+    if ($newStatus === 'cancelled') {
+        $order->restoreStockIfNeeded();
+    }
+
+    $order->update($updateData);
+
+    // ✅ fix: pakai route name yang benar
+    return redirect()
+    ->route('admin.orders.show', $order->id)
+        ->with('success', "Status order berhasil diubah dari <b>{$oldStatus}</b> ke <b>{$newStatus}</b>");
+}
+
+public function update(Request $request, Order $order)
+{
+    $validated = $request->validate([
+        'status'          => 'required|in:pending,processing,shipped,delivered,cancelled',
+        'payment_status'  => 'required|in:pending,paid,failed,expired,refunded',
+        'customer_name'   => 'required|string|max:255',
+        'email'           => 'required|email|max:255',
+        'phone'           => 'nullable|string|max:20',
+        'address'         => 'nullable|string|max:500',
+        'district_name'   => 'nullable|string|max:100',
+        'regency_name'    => 'nullable|string|max:100',
+        'province_name'   => 'nullable|string|max:100',
+        'admin_note'      => 'nullable|string|max:1000',
+    ]);
+
+    // Set shipped_at / delivered_at otomatis
+    if ($validated['status'] === 'shipped' && !$order->shipped_at) {
+        $validated['shipped_at'] = now();
+    }
+    if ($validated['status'] === 'delivered' && !$order->delivered_at) {
+        $validated['delivered_at'] = now();
+    }
+    if ($validated['payment_status'] === 'paid' && !$order->paid_at) {
+        $validated['paid_at'] = now();
+    }
+
+    $order->update($validated);
+
+    return redirect()
+        ->route('admin.orders.show', $order->id)
+        ->with('success', 'Order <strong>'.$order->invoice_number.'</strong> berhasil diperbarui.');
+}
+
 public function show($invoiceNumber)
 {
     $order = Order::with(['items', 'payments'])

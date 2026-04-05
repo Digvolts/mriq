@@ -58,6 +58,14 @@
                         <i class="fas fa-boxes"></i>
                         <span>Products</span>
                     </a>
+                    <a href="{{ route('admin.orders.index') }}" 
+                       class="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-2
+                       {{ request()->routeIs('admin.orders.*') 
+                           ? 'bg-indigo-600 text-white shadow-lg' 
+                           : 'text-slate-300 hover:text-white hover:bg-slate-700/50' }}">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span>Orders</span>
+                    </a>
                 </div>
             </div>
 
@@ -201,6 +209,14 @@
                    : 'text-slate-300 hover:text-white hover:bg-slate-700' }}">
                 <i class="fas fa-boxes w-5"></i>
                 <span>Products</span>
+            </a>
+            <a href="{{ route('admin.orders.index') }}" 
+               class="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200
+               {{ request()->routeIs('admin.orders.*') 
+                   ? 'bg-indigo-600 text-white' 
+                   : 'text-slate-300 hover:text-white hover:bg-slate-700' }}">
+                <i class="fas fa-shopping-cart w-5"></i>
+                <span>Orders</span>
             </a>
         </div>
     </div>

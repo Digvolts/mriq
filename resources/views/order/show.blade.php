@@ -85,7 +85,183 @@
 
         <!-- ===== MAIN GRID ===== -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+<!-- ===== STATUS TIMELINE ===== -->
+<div class="bg-white rounded-3xl p-8 shadow-xl border border-gray-200 mb-8">
+    
+    <!-- Title -->
+    <div class="flex items-center gap-3 mb-8 pb-6 border-b-2 border-gray-100">
+        <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
+            <i class="fas fa-route text-white text-lg"></i>
+        </div>
+        <div>
+            <h2 class="text-xl font-black text-gray-900">Status Pesanan</h2>
+            <p class="text-sm text-gray-500">Lacak perkembangan pesanan Anda</p>
+        </div>
+    </div>
 
+    {{-- Define steps --}}
+    @php
+        $steps = [
+            [
+                'key'   => 'pending',
+                'label' => 'Pesanan Dibuat',
+                'desc'  => 'Pesanan berhasil diterima',
+                'icon'  => 'fa-cart-shopping',
+                'color' => 'amber',
+            ],
+            [
+                'key'   => 'paid',
+                'label' => 'Pembayaran',
+                'desc'  => 'Pembayaran dikonfirmasi',
+                'icon'  => 'fa-credit-card',
+                'color' => 'blue',
+            ],
+            [
+                'key'   => 'processing',
+                'label' => 'Diproses',
+                'desc'  => 'Pesanan sedang disiapkan',
+                'icon'  => 'fa-gear',
+                'color' => 'violet',
+            ],
+            [
+                'key'   => 'shipped',
+                'label' => 'Dikirim',
+                'desc'  => 'Pesanan dalam perjalanan',
+                'icon'  => 'fa-truck-fast',
+                'color' => 'orange',
+            ],
+            [
+                'key'   => 'delivered',
+                'label' => 'Selesai',
+                'desc'  => 'Pesanan telah diterima',
+                'icon'  => 'fa-circle-check',
+                'color' => 'emerald',
+            ],
+        ];
+
+        $statusOrder = ['pending', 'paid', 'processing', 'shipped', 'delivered'];
+        $currentIndex = array_search($order->status, $statusOrder);
+        $currentIndex = $currentIndex === false ? 0 : $currentIndex;
+
+        // If payment failed
+        $isFailed = $order->payment_status === 'failed';
+
+        // Progress percentage
+        $progressPercent = $isFailed ? 0 : round(($currentIndex / (count($steps) - 1)) * 100);
+    @endphp
+
+    <!-- Progress Bar -->
+    <div class="mb-8">
+        <div class="flex justify-between items-center mb-2">
+            <span class="text-sm font-semibold text-gray-600">Progress Pesanan</span>
+            <span class="text-sm font-black 
+                {{ $isFailed ? 'text-red-500' : 'text-emerald-600' }}">
+                {{ $isFailed ? 'Gagal' : $progressPercent . '%' }}
+            </span>
+        </div>
+        <div class="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
+            <div class="h-full rounded-full transition-all duration-700 ease-out
+                {{ $isFailed 
+                    ? 'bg-gradient-to-r from-red-400 to-pink-500' 
+                    : 'bg-gradient-to-r from-purple-500 via-blue-500 to-emerald-500' }}"
+                 style="width: {{ $isFailed ? '100' : $progressPercent }}%">
+            </div>
+        </div>
+    </div>
+
+    <!-- Timeline Steps -->
+    <div class="relative">
+
+        {{-- Vertical line --}}
+        <div class="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-100 z-0"></div>
+
+        <div class="space-y-6 relative z-10">
+            @foreach ($steps as $i => $step)
+                @php
+                    $isDone    = !$isFailed && $i < $currentIndex;
+                    $isActive  = !$isFailed && $i === $currentIndex;
+                    $isPending = $isFailed  || $i > $currentIndex;
+
+                    $colorMap = [
+                        'amber'   => ['bg' => 'bg-amber-500',   'light' => 'bg-amber-100',   'text' => 'text-amber-600',   'border' => 'border-amber-300',   'badge' => 'bg-amber-100 text-amber-700'],
+                        'blue'    => ['bg' => 'bg-blue-500',    'light' => 'bg-blue-100',    'text' => 'text-blue-600',    'border' => 'border-blue-300',    'badge' => 'bg-blue-100 text-blue-700'],
+                        'violet'  => ['bg' => 'bg-violet-500',  'light' => 'bg-violet-100',  'text' => 'text-violet-600',  'border' => 'border-violet-300',  'badge' => 'bg-violet-100 text-violet-700'],
+                        'orange'  => ['bg' => 'bg-orange-500',  'light' => 'bg-orange-100',  'text' => 'text-orange-600',  'border' => 'border-orange-300',  'badge' => 'bg-orange-100 text-orange-700'],
+                        'emerald' => ['bg' => 'bg-emerald-500', 'light' => 'bg-emerald-100', 'text' => 'text-emerald-600', 'border' => 'border-emerald-300', 'badge' => 'bg-emerald-100 text-emerald-700'],
+                    ];
+                    $c = $colorMap[$step['color']];
+                @endphp
+
+                <div class="flex items-start gap-4 
+                    {{ $isActive ? 'opacity-100' : ($isDone ? 'opacity-100' : 'opacity-40') }}
+                    transition-opacity duration-300">
+
+                    <!-- Icon Circle -->
+                    <div class="flex-shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center border-2 shadow-sm
+                        {{ $isDone   ? $c['bg'] . ' border-transparent text-white' : '' }}
+                        {{ $isActive ? $c['light'] . ' ' . $c['border'] . ' ' . $c['text'] . ' ring-4 ring-offset-2 ' . $c['light'] : '' }}
+                        {{ $isPending && !$isFailed ? 'bg-gray-100 border-gray-200 text-gray-400' : '' }}
+                        {{ $isFailed ? 'bg-red-100 border-red-200 text-red-400' : '' }}">
+
+                        @if ($isDone)
+                            <i class="fas fa-check text-sm font-black"></i>
+                        @elseif ($isActive)
+                            <i class="fas {{ $step['icon'] }} text-sm animate-pulse"></i>
+                        @else
+                            <i class="fas {{ $step['icon'] }} text-sm"></i>
+                        @endif
+                    </div>
+
+                    <!-- Content -->
+                    <div class="flex-1 pt-1">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <p class="font-bold text-gray-900 text-sm">{{ $step['label'] }}</p>
+
+                            @if ($isActive && !$isFailed)
+                                <span class="px-2 py-0.5 rounded-full text-xs font-bold {{ $c['badge'] }}">
+                                    Saat Ini
+                                </span>
+                            @elseif ($isDone)
+                                <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">
+                                    ✓ Selesai
+                                </span>
+                            @endif
+
+                            @if ($isFailed && $i === 0)
+                                <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-600">
+                                    Gagal
+                                </span>
+                            @endif
+                        </div>
+
+                        <p class="text-xs text-gray-500 mt-0.5">{{ $step['desc'] }}</p>
+
+                        {{-- Timestamp if available --}}
+                        @if ($isDone || $isActive)
+                            <p class="text-xs text-gray-400 mt-1">
+                                <i class="fas fa-clock mr-1"></i>
+                                {{ $order->updated_at->format('d M Y, H:i') }} WIB
+                            </p>
+                        @endif
+                    </div>
+                </div>
+
+            @endforeach
+        </div>
+    </div>
+
+    <!-- Failed Note -->
+    @if ($isFailed)
+        <div class="mt-6 p-4 bg-red-50 border border-red-200 rounded-2xl flex items-start gap-3">
+            <i class="fas fa-triangle-exclamation text-red-500 mt-0.5"></i>
+            <div>
+                <p class="text-sm font-bold text-red-700">Pembayaran Gagal</p>
+                <p class="text-xs text-red-500 mt-0.5">Silakan hubungi customer service atau coba lakukan pemesanan ulang.</p>
+            </div>
+        </div>
+    @endif
+
+</div>
             <!-- ===== LEFT SECTION (2 COLS) ===== -->
             <div class="lg:col-span-2 space-y-6">
 

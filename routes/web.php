@@ -28,7 +28,7 @@ Route::get('/products/{id}', [HomeController::class, 'show'])->name('products.sh
 Route::get('/new-arrivals/{newArrival}', [HomeController::class, 'showNewArrival'])->name('new-arrivals.show');
 
 // View Collection Products
-Route::get('/collection/{collection}', [HomeController::class, 'collectionProducts'])->name('collection.products');
+Route::get('/collection/{collection}', [CollectionController::class, 'show'])->name('collection.products');
 
 // ============================================
 // CART ROUTES
@@ -110,6 +110,12 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     // GET    /admin/new-arrivals/{id}/edit    (edit)
     // PUT    /admin/new-arrivals/{id}         (update)
     // DELETE /admin/new-arrivals/{id}         (destroy)
+    Route::prefix('orders')->name('orders.')->group(function () {
+        Route::get('/',                [OrderController::class, 'index'])->name('index');
+        Route::get('/{id}',            [OrderController::class, 'adminshow'])->name('show');
+        Route::patch('/{id}/status',   [OrderController::class, 'updateStatus'])->name('updateStatus'); // ✅ lebih spesifik, di atas
+        Route::patch('/{id}',          [OrderController::class, 'update'])->name('update');             // ✅ generic, di bawah
+    });
 });
 
 

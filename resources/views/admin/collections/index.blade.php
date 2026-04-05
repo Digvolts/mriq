@@ -1,17 +1,12 @@
-@extends('layouts.app')
-
+@extends('layouts.admin')
+@section('title', 'Collections Management')
+@section('page_title', 'Collections Management')
 @section('content')
 <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 py-8 px-2 md:px-4">
     
     <!-- Header -->
     <div class="w-full mb-8">
         <div class="flex justify-between items-start mb-2 px-4">
-            <div>
-                <h1 class="text-4xl font-bold text-gray-900 mb-2">
-                    <i class="fas fa-layer-group text-indigo-600 mr-2"></i>Koleksi
-                </h1>
-                <p class="text-gray-600">Kelola semua koleksi produk</p>
-            </div>
             <a href="{{ route('admin.collections.create') }}" class="px-6 py-3 bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-bold rounded-lg hover:shadow-lg transition-all transform hover:scale-105 active:scale-95 flex items-center gap-2">
                 <i class="fas fa-plus"></i>Tambah Koleksi
             </a>

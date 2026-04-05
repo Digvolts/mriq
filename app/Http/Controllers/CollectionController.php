@@ -75,4 +75,20 @@ class CollectionController extends Controller
         return redirect()->route('admin.collections.index')
             ->with('success', 'Koleksi berhasil dihapus');
     }
+    public function show(Collection $collection)
+    {
+        // Only show active collections
+        if (!$collection->is_active) {
+            abort(404);
+        }
+
+        $products = $collection->products()
+                            ->where('is_active', true)
+                            ->latest()
+                            ->paginate(12);
+
+        $collections = Collection::where('is_active', true)->get(); // for sidebar/filter
+
+        return view('collection.show', compact('collection', 'products', 'collections'));
+    }
 }

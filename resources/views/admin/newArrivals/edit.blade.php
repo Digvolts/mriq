@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 
 @section('content')
 <div class="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-pink-100 py-8 px-4 md:px-8">
@@ -39,7 +39,7 @@
             </div>
         @endif
 
-        <form action="{{ route('admin.newArrivals.update', $newArival) }}" 
+        <form action="{{ route('admin.newArrivals.update', $newArrival) }}" 
               method="POST" 
               enctype="multipart/form-data"
               class="space-y-6">
@@ -64,7 +64,7 @@
                                class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-purple-600 focus:ring-2 focus:ring-purple-100 outline-none transition-all @error('name') border-red-500 @enderror" 
                                id="name" 
                                name="name" 
-                               value="{{ old('name', $newArival->name) }}"
+                               value="{{ old('name', $newArrival->name) }}"
                                placeholder="Contoh: Summer Collection 2024"
                                required>
                         @error('name')
@@ -84,14 +84,14 @@
 
                 <div class="p-6 space-y-4">
                     <!-- Current Image -->
-                    @if ($newArival->image && \Illuminate\Support\Facades\Storage::disk('public')->exists($newArival->image))
+                    @if ($newArrival->image && \Illuminate\Support\Facades\Storage::disk('public')->exists($newArrival->image))
                         <div>
                             <p class="text-sm font-semibold text-gray-700 mb-3">
                                 <i class="fas fa-image text-pink-600 mr-2"></i>Gambar Saat Ini
                             </p>
                             <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                                <img src="{{ asset('storage/' . $newArival->image) }}" 
-                                     alt="{{ $newArival->name }}"
+                                <img src="{{ asset('storage/' . $newArrival->image) }}" 
+                                     alt="{{ $newArrival->name }}"
                                      class="max-w-xs h-auto rounded-lg shadow-md border-2 border-pink-300">
                             </div>
                         </div>
@@ -170,7 +170,7 @@
                                    name="is_active" 
                                    value="1"
                                    class="sr-only peer"
-                                   {{ old('is_active', $newArival->is_active) ? 'checked' : '' }}>
+                                   {{ old('is_active', $newArrival->is_active) ? 'checked' : '' }}>
                             
                             <div class="w-full h-full bg-gray-300 peer-checked:bg-emerald-600 rounded-full transition-all duration-300"></div>
                             <div class="absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-all duration-300 peer-checked:translate-x-6 shadow-md peer-checked:shadow-lg"></div>
