@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\OrderInvoiceMail;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\OrderPayment;
@@ -11,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
 use SebastianBergmann\Environment\Console;
 
 class CartController extends Controller
@@ -271,6 +273,7 @@ $validated['province_name'] = $province['name'] ?? '';
 
     $order = $orderService->createFromCart($cart, $validated);
     $paymentService->create($order);
+    Mail::to($validated['email'])->send(new OrderInvoiceMail($order));
 
     session()->forget('cart');
 
